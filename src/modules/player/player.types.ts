@@ -11,5 +11,5 @@ export type Player = {
 
   color?: string;
 
-  role: PlayerRole;
+  role?: PlayerRole;
 };

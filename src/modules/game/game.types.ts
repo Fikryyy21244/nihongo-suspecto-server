@@ -1,4 +1,5 @@
 export type GamePhase =
+  | "lobby"
   | "category_select"
   | "playing"
   | "voting"
