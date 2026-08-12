@@ -1,4 +1,5 @@
 import { generateRoomId } from "../../utils/generateRoomId";
+import { PLAYER_COLORS } from "../../utils/playerColors";
 import type { Room, Rooms } from "./room.types";
 
 export class RoomService {
@@ -18,18 +19,17 @@ export class RoomService {
   // CREATE ROOM
   createRoom(playerName: string, socketId: string): Room {
     const roomId = generateRoomId();
-    const playerId = crypto.randomUUID();
 
     const newRoom: Room = {
       id: roomId,
 
-      hostId: playerId,
+      hostId: socketId,
 
       status: "waiting",
 
       players: [
         {
-          id: playerId,
+          id: socketId,
           socketId,
           name: playerName,
 
@@ -37,7 +37,7 @@ export class RoomService {
           isReady: false,
           isHost: true,
 
-          color: "#FF0000",
+          color: PLAYER_COLORS[0] || "#000000",
         },
       ],
 
@@ -61,5 +61,47 @@ export class RoomService {
     this.rooms[roomId] = newRoom;
 
     return newRoom;
+  }
+
+  // JOIN ROOM
+  joinRoom(roomId: string, playerName: string, socketId: string): Room {
+    const MAX_PLAYER = 8;
+
+    const room = this.getRoomById(roomId);
+
+    if (!room) {
+      throw new Error("ROOM_NOT_FOUND");
+    }
+
+    if (room.players.length >= MAX_PLAYER) {
+      throw new Error("ROOM_FULL");
+    }
+
+    if (room.game?.status !== "waiting") {
+      throw new Error("GAME_ALREADY_STARTED");
+    }
+
+    const playerAlreadyExists = room.players.some(
+      (player) => player.socketId === socketId,
+    );
+
+    if (playerAlreadyExists) {
+      throw new Error("PLAYER_ALREADY_IN_ROOM");
+    }
+
+    const color = PLAYER_COLORS[room.players.length] || "#000000";
+
+    room.players.push({
+      id: socketId,
+      name: playerName,
+      socketId,
+      color,
+
+      isAlive: true,
+      isReady: false,
+      isHost: false,
+    });
+
+    return room;
   }
 }

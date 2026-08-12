@@ -6,6 +6,13 @@ const roomService = new RoomService();
 export const roomHandler = (io: Server, socket: Socket) => {
   socket.on("room:create", ({ playerName }: { playerName: string }) => {
     try {
+      if (!playerName || !playerName.trim()) {
+        socket.emit("room:error", {
+          message: "Nama player tidak boleh kosong!",
+        });
+
+        return;
+      }
       const room = roomService.createRoom(playerName, socket.id);
 
       socket.join(room.id);
